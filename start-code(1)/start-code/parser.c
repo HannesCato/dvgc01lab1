@@ -74,6 +74,63 @@ static void match(int t)
 /**********************************************************************/
 /* The grammar functions                                              */
 /**********************************************************************/
+static void prog(){
+in("prog");
+program_header();
+var_part();
+stat_part();
+out("prog");
+}
+static void prog_header(){
+
+}
+static void var_part(){
+   in("var_part");
+   if(lookahead == var){
+    match(var);
+    var_dec_list();
+   }
+   out("var_part");
+}
+static void var_dec_list(){
+    in("var_dec_list");
+    var_dec()
+    while(lookahead == id){
+        var_dec();
+    }
+    out("var_dec_list");
+}
+static void var_dec(){
+
+}
+static void id_list(){
+
+}
+static void stat_part(){
+
+}
+static void stat_list(){
+
+}
+static void stat(){
+
+}
+static void assign_stat(){
+
+}
+static void expr(){
+
+}
+static void term(){
+
+}
+static void factor(){
+
+}
+static void operand(){
+
+}
+
 static void program_header()
 {
     in("program_header");
