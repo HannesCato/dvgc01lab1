@@ -83,7 +83,10 @@ stat_part();
 out("prog");
 }
 static void prog_header(){
+    in("prog_header");
+    
 
+    out("prog_header");
 }
 static void var_part(){
    in("var_part");
