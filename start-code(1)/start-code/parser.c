@@ -29,12 +29,13 @@ static int  is_parse_ok=1;
 /**********************************************************************/
 /* define tokens + keywords NB: remove this when keytoktab.h is added */
 /**********************************************************************/
-enum tvalues { program = 257, id, input, output };
+enum tvalues { program = 257, id, input, output, var, integer, real, boolean, begin_, end_, number, assign};
 /**********************************************************************/
 /* Simulate the token stream for a given program                      */
 /**********************************************************************/
-static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
-               '$' };
+static int tokens[] = {program, id, '(', input, ',', output, ')', ';','$',
+                        var, id, ',', id, ',', id, ':', integer, ';',
+                        begin_, id, assign, id, '+', id, '*', number, end_, '.'};
 
 /**********************************************************************/
 /*  Simulate the lexer -- get the next token from the buffer          */
@@ -94,41 +95,116 @@ static void var_part(){
 }
 static void var_dec_list(){
     in("var_dec_list");
-    var_dec()
-    while(lookahead == id){
+    var_dec();
+    if(lookahead == id){
         var_dec();
     }
     out("var_dec_list");
 }
 static void var_dec(){
+    in("var_dec");
+    id_list();
+    match(':');
+    if(lookahead == integer){
+        match(integer);
+    }else if(lookahead == real){
+        match(real);
+    }
+    match(';');
+    out("var_dec");    
 
 }
 static void id_list(){
-
+    in("id_list");
+    match(id);
+    if(lookahead == ';'){
+        match(',');
+        match(id);
+    }
+    out("id_list");
 }
+
+static void type(){
+    in("type");
+    if(lookahead == integer){
+        match(integer);
+    }else if(lookahead == real){
+        match(real);
+    }else if(lookahead == boleean){
+        match(boolean);
+    }
+    out("type");
+}
+
 static void stat_part(){
+    in("stat_part");
+    match(begin_);
+    stat_list();
+    match(end_); 
+    match('.');
+    out("stat_part");
 
 }
 static void stat_list(){
-
-}
+    in("stat_list");
+        stat();
+        if(lookahead == ';'){
+            match(';');
+            stat();
+        }
+    
+    out("stat_list");
+    }
 static void stat(){
-
+in("stat");
+assign_stat();
 }
 static void assign_stat(){
+    in("assign_stat");
+    match(id);
+    match(assign);
+    expr();
+    out("assign_stat");
 
 }
 static void expr(){
-
+    in("expr");
+    term();
+    if(lookahead == '+'){
+        match('+');
+        term();
+    }
+    out("expr");
 }
 static void term(){
-
+    in("term");
+    factor();
+    if(lookahead == '*'){
+        match('*');
+        factor();
+    }
+    out("term");
 }
 static void factor(){
-
+    in("factor");
+    if(lookahead == '('){
+        match('(');
+        expr();
+        match(')');
+    }else{
+        operand();
+    }
+    out("factor");
 }
 static void operand(){
-
+    in("operand");
+    if(lookahead == id){
+        match(id);
+        
+    }else if(lookahead == number){
+        match(number);
+    }
+    out("operand");
 }
 
 static void program_header()
