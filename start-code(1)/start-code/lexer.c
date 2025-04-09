@@ -35,8 +35,15 @@ static int  plex  = 0;               /* current index lexeme  buffer  */
 /**********************************************************************/
 
 static void get_prog()
-{
-    printf("\n *** TO BE DONE");
+{   
+    fgets(buffer, sizeof(buffer), stdin);
+    char c;
+    while((c = getc(stdin)) !=EOF)
+        buffer[pbuf++] = c; 
+    buffer[pbuf] = '$';
+    buffer[pbuf + 1] = '\0';
+    pbuf = 0;
+    fclose(stdin);
 }
 
 /**********************************************************************/
@@ -45,7 +52,8 @@ static void get_prog()
 
 static void pbuffer()
 {
-    printf("\n *** TO BE DONE");
+    //buffer[pbuf];
+    //printf("%c \n", buffer[pbuf]);
 }
 
 /**********************************************************************/
@@ -54,7 +62,9 @@ static void pbuffer()
 
 static void get_char()
 {
-    printf("\n *** TO BE DONE");
+    lexbuf[plex++] = buffer[pbuf++];
+    buffer[pbuf] = '\0';
+    
 }
 
 /**********************************************************************/
