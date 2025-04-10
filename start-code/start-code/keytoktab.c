@@ -98,7 +98,7 @@ toktyp lex2tok(char *fplex)
             return tokentab[i].token;
     }
 
-    return error;
+    return id;
 }
 
 

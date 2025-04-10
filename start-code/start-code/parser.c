@@ -6,10 +6,12 @@
 #include <ctype.h>
 #include <string.h>
 #include "keytoktab.h"
+#include "lexer.h"
 
 #define DEBUG 1
 static int lookahead = 0;
 static int is_parse_ok = 1;
+
 
 // Function prototypes
 static void prog();
@@ -37,7 +39,7 @@ static void operand();
 enum tvalues { program = 257, id, input, output, var, integer, real, boolean, begin, end, number, assign };
 */
 
-/* Temporary token stream – will be removed in step 3 */
+/* Temporary token stream – will be removed in step 3
 static int tokens[] = {
     program, id, '(', input, ',', output, ')', ';',
     var, id, ',', id, ',', id, ':', integer, ';',
@@ -49,7 +51,7 @@ static int pget_token() {
     static int i = 0;
     if (tokens[i] != '$') return tokens[i++];
     else return '$';
-}
+} */
 
 /**********************************************************************/
 /* Helper functions                                                   */
@@ -66,7 +68,7 @@ static void match(int t) {
         printf("\n *** In  match        expected %s found %s", tok2lex(t), tok2lex(lookahead));
 
     if (lookahead == t)
-        lookahead = pget_token();
+        lookahead = get_token();
     else {
         is_parse_ok = 0;
         printf("\n *** Syntax Error: expected %s, found %s\n", tok2lex(t), tok2lex(lookahead));
@@ -222,7 +224,7 @@ static void operand() {
 /**********************************************************************/
 int parser() {
     in("parser");
-    lookahead = pget_token(); 
+    lookahead = get_token(); 
     prog();                   
     out("parser");
     return is_parse_ok;        

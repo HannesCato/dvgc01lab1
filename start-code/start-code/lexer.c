@@ -36,14 +36,17 @@ static int  plex  = 0;               /* current index lexeme  buffer  */
 
 static void get_prog()
 {   
-    fgets(buffer, sizeof(buffer), stdin);
     char c;
-    while((c = getc(stdin)) !=EOF)
-        buffer[pbuf++] = c; 
-    buffer[pbuf] = '$';
-    buffer[pbuf + 1] = '\0';
+    int i = 0;
+    while((c = getc(stdin)) != EOF && i < BUFSIZE - 2){
+    buffer[i++] = c;
+    }
+
+    buffer[i] = '$';
+    buffer[i + 1] = '\0';
+    
     pbuf = 0;
-    fclose(stdin);
+    //fclose(stdin);
 }
 
 /**********************************************************************/
@@ -52,8 +55,7 @@ static void get_prog()
 
 static void pbuffer()
 {
-    //buffer[pbuf];
-    //printf("%c \n", buffer[pbuf]);
+    printf("BUFFER: %s\n", buffer);
 }
 
 /**********************************************************************/
@@ -63,7 +65,7 @@ static void pbuffer()
 static void get_char()
 {
     lexbuf[plex++] = buffer[pbuf++];
-    buffer[pbuf] = '\0';
+    //buffer[pbuf] = '\0';
     
 }
 
@@ -79,7 +81,54 @@ static void get_char()
 /**********************************************************************/
 int get_token()
 {
-    printf("\n *** TO BE DONE"); return 0;
+   static int initialized = 0;
+   if(!initialized){
+    get_prog();
+    pbuffer();
+    initialized = 1;
+   } 
+  //get_prog();
+  //pbuffer(); 
+
+   if (buffer[pbuf] == '$') {
+    strcpy(lexbuf, "$");
+    return '$';
+}
+
+   while(isspace(buffer[pbuf]))pbuf++;
+   plex = 0;
+   
+   char c = buffer[pbuf];
+   if(isalpha(c)){
+    //id or key
+      while(isalnum(buffer[pbuf]))get_char();
+    lexbuf[plex] = '\0';
+    return lex2tok(lexbuf);
+   } 
+   else if(isdigit(c)) {
+    //number
+    while(isdigit(buffer[pbuf]))get_char();
+    lexbuf[plex] = '\0';
+    return number;
+   }
+   else if(c == ':' && buffer[pbuf + 1] == '='){
+    //:= operator
+    get_char();
+    get_char();
+    lexbuf[plex] = '\0';
+    return assign;
+   }
+   else if(ispunct(c)){
+    //symboler och operatorer
+    get_char();
+    lexbuf[plex] = '\0';
+    return lex2tok(lexbuf);
+   } 
+   else {
+      get_char();
+      lexbuf[plex] = '\0';
+      return error;       
+   }
 }
 
 /**********************************************************************/
@@ -87,7 +136,7 @@ int get_token()
 /**********************************************************************/
 char * get_lexeme()
 {
-    printf("\n *** TO BE DONE"); return "$";
+    return lexbuf;
 }
 
 /**********************************************************************/
