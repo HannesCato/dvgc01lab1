@@ -59,7 +59,16 @@ static void set_addr(int ftref, int    faddr)  { addr[ftref] = faddr; }
 static void addrow(char *fname, toktyp frole, toktyp ftype,
                    int fsize, int faddr)
 {
-    printf("\n *** TO BE DONE");
+    if(numrows < TABSIZE){
+        set_name(numrows, fname);
+        set_role(numrows, frole);
+        set_type(numrows, ftype);
+        set_size(numrows, fsize);
+        set_addr(numrows, faddr);
+    numrows++;
+    } else {
+        fprintf(stderr, "SYMTAB IS FULL");
+    }
 }
 /**********************************************************************/
 /*  Initialise the symbol table                                       */
