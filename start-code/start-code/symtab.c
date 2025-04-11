@@ -87,7 +87,11 @@ static void initst()
 /**********************************************************************/
 static int get_ref(char * fpname)
 {
-    printf("\n *** TO BE DONE"); return 0;
+    for(int i = 0; i < numrows; i++){
+        if(strcmp(name[i], fpname))
+            return i;
+        } 
+    return nfound;
 }
 
 /**********************************************************************/
@@ -98,12 +102,23 @@ static int get_ref(char * fpname)
 /**********************************************************************/
 static void p_symrow(int ftref)
 {
-    printf("\n *** TO BE DONE");
+    printf("| %-11s | %5d | %5d | %4d | %4d |\n",
+        get_name(ftref),
+        get_role(ftref),
+        get_type(ftref),
+        get_size(ftref),
+        get_addr(ftref));
 }
 
 void p_symtab()
-{
-    printf("\n *** TO BE DONE");
+{   
+    printf("------------------------------------");
+    printf("THE SYMBOL TABLE");
+    printf("------------------------------------");
+    printf("| NAME | ROLE | TYPE | SIZE | ADDR |");
+    printf("------------------------------------");
+    for(int i = 0; i < numrows; i++)
+    p_symrow(i);
 }
 
 /**********************************************************************/
