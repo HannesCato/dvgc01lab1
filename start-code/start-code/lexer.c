@@ -55,7 +55,10 @@ static void get_prog()
 
 static void pbuffer()
 {
-    printf("BUFFER: %s\n", buffer);
+    printf("------------------------------------------------\n");
+    printf(" THE PROGRAM TEXT\n");
+    printf("------------------------------------------------\n");
+    printf("%s\n", buffer);
 }
 
 /**********************************************************************/

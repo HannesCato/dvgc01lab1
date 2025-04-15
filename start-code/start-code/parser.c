@@ -7,8 +7,10 @@
 #include <string.h>
 #include "keytoktab.h"
 #include "lexer.h"
+#include "symtab.h"
 
-#define DEBUG 1
+#define DEBUG 0
+#define NAMELEN 20
 static int lookahead = 0;
 static int is_parse_ok = 1;
 
@@ -90,7 +92,13 @@ static void prog() {
 
 static void program_header() {
     in("program_header");
-    match(program); match(id); match('('); match(input);
+    match(program); 
+    char program_name[NAMELEN];
+    strcpy(program_name, get_lexeme());
+    match(id);
+    addp_name(program_name);
+    
+    match('('); match(input);
     match(','); match(output); match(')'); match(';');
     out("program_header");
 }
@@ -124,7 +132,10 @@ static void var_dec() {
 
 static void id_list() {
     in("id_list");
+    char varname[NAMELEN];
+    strcpy(varname, get_lexeme());
     match(id);
+    addv_name(varname);
     if (lookahead == ',') {
         match(',');
         id_list();
@@ -134,6 +145,7 @@ static void id_list() {
 
 static void type() {
     in("type");
+    toktyp typval = lookahead;
     if (lookahead == integer) {
         match(integer);
     } else if (lookahead == real) {
@@ -141,6 +153,7 @@ static void type() {
     } else if (lookahead == boolean) {
         match(boolean);
     }
+    setv_type(typval);
     out("type");
 }
 
@@ -227,5 +240,6 @@ int parser() {
     lookahead = get_token(); 
     prog();                   
     out("parser");
+    p_symtab();
     return is_parse_ok;        
 }
