@@ -8,6 +8,7 @@
 #include "keytoktab.h"
 #include "lexer.h"
 #include "symtab.h"
+#include "optab.h"
 
 #define DEBUG 0
 #define NAMELEN 20
@@ -27,10 +28,10 @@ static void stat_part();
 static void stat_list();
 static void stat();
 static void assign_stat();
-static void expr();
-static void term();
-static void factor();
-static void operand();
+static toktyp expr();
+static toktyp term();
+static toktyp factor();
+static toktyp operand();
 
 /**********************************************************************/
 /* RAPID PROTOTYPING – simulated token stream (removed in step 3)     */
@@ -184,52 +185,71 @@ static void stat() {
 
 static void assign_stat() {
     in("assign_stat");
+    char idname[NAMELEN];
+    strcpy(idname, get_lexeme());
     match(id);
+    toktyp t_left = get_ntype(idname);
     match(assign);
-    expr();
+    toktyp t_right = expr();
+
+    if(t_left != t_right){
+        is_parse_ok = 0;
+    }
     out("assign_stat");
 }
 
-static void expr() {
+static toktyp expr() {
     in("expr");
-    term();
+    toktyp t1 = term();
     if (lookahead == '+') {
         match('+');
-        expr();
+        toktyp t2 = expr();
+        t1 = get_otype('+', t1, t2);
     }
     out("expr");
+    return t1;
 }
 
-static void term() {
+static toktyp term() {
     in("term");
-    factor();
+    toktyp t1 = factor();
     if (lookahead == '*') {
         match('*');
-        term();
+        toktyp t2 = term();
+        t1 = get_otype('*', t1, t2);
     }
     out("term");
+    return t1;
 }
 
-static void factor() {
+static toktyp factor() {
     in("factor");
+    toktyp t;
     if (lookahead == '(') {
         match('(');
-        expr();
+        t = expr();
         match(')');
     } else {
-        operand();
+        t = operand();
     }
     out("factor");
+    return t;
 }
 
-static void operand() {
+static toktyp operand() {
     in("operand");
+    toktyp t = undef;
     if (lookahead == id) {
+        char idname[NAMELEN];
+        strcpy(idname, get_lexeme());
         match(id);
+        t = get_ntype(idname);
     } else if (lookahead == number) {
         match(number);
+        t = integer;
     }
     out("operand");
+    return t;
 }
 
 /**********************************************************************/
