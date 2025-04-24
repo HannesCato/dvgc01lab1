@@ -18,6 +18,7 @@
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
 #define NENTS 4
+#define LINE 50
 
 static int optab[][NENTS] = {
    {'+', integer, integer, integer},
@@ -41,14 +42,20 @@ static int optab[][NENTS] = {
 /**********************************************************************/
 /* display the op tab                                                 */
 /**********************************************************************/
+void p_line(){
+    for(int i = 0; i < LINE; i++){
+        printf("-");
+    }
+    printf("\n");
+}
+
 void p_optab()
 {
-    printf("------------------------------------------------\n");
+    p_line();
     printf(" THE OPERATOR TABLE\n");
-    printf("------------------------------------------------\n");
+    p_line();
     printf("  operator       arg1         arg2     result\n");
-    printf("------------------------------------------------\n");
-
+    p_line();
     int i = 0; 
     while(optab[i][0] != '$'){
         printf("         %c,   %-8s,   %-8s,   %-8s\n",
@@ -58,7 +65,7 @@ void p_optab()
             tok2lex(optab[i][3]));
         i++;
     }
-    printf("------------------------------------------------\n");
+    p_line();
 }
 
 /**********************************************************************/

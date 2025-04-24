@@ -19,6 +19,7 @@
 /**********************************************************************/
 #define BUFSIZE 1024
 #define LEXSIZE   30
+#define LINE 50
 static char buffer[BUFSIZE];
 static char lexbuf[LEXSIZE];
 static int  pbuf  = 0;               /* current index program buffer  */
@@ -46,18 +47,24 @@ static void get_prog()
     buffer[i + 1] = '\0';
     
     pbuf = 0;
-    //fclose(stdin);
 }
 
 /**********************************************************************/
 /* Display the buffer                                                 */
 /**********************************************************************/
 
+void p_line(){
+    for(int i = 0; i < LINE; i++){
+        printf("-");
+    }
+    printf("\n")
+}
+
 static void pbuffer()
 {
-    printf("------------------------------------------------\n");
+    p_line();
     printf(" THE PROGRAM TEXT\n");
-    printf("------------------------------------------------\n");
+    p_line();
     printf("%s\n", buffer);
 }
 
@@ -68,8 +75,6 @@ static void pbuffer()
 static void get_char()
 {
     lexbuf[plex++] = buffer[pbuf++];
-    //buffer[pbuf] = '\0';
-    
 }
 
 /**********************************************************************/
@@ -84,54 +89,50 @@ static void get_char()
 /**********************************************************************/
 int get_token()
 {
-   static int initialized = 0;
-   if(!initialized){
+   static int initialized = 1;
+   plex = 0;
+   memset(lexbuf, 0, LEXSIZE);
+
+   
+   if(initialized == 1){
     get_prog();
     pbuffer();
-    initialized = 1;
+    initialized = 0;
+    pbuf = 0;
    } 
-  //get_prog();
-  //pbuffer(); 
 
    if (buffer[pbuf] == '$') {
     strcpy(lexbuf, "$");
     return '$';
 }
 
-   while(isspace(buffer[pbuf]))pbuf++;
-   plex = 0;
-   
-   char c = buffer[pbuf];
-   if(isalpha(c)){
-    //id or key
-      while(isalnum(buffer[pbuf]))get_char();
-    lexbuf[plex] = '\0';
-    return lex2tok(lexbuf);
-   } 
-   else if(isdigit(c)) {
+while(isspace(buffer[pbuf]))pbuf++;
+
+
+if(isdigit(buffer[pbuf])) {
     //number
-    while(isdigit(buffer[pbuf]))get_char();
-    lexbuf[plex] = '\0';
+    while(isdigit(buffer[pbuf])){
+        get_char();
+    }
     return number;
-   }
-   else if(c == ':' && buffer[pbuf + 1] == '='){
-    //:= operator
-    get_char();
-    get_char();
-    lexbuf[plex] = '\0';
-    return assign;
-   }
-   else if(ispunct(c)){
+} else if(isalpha(buffer[pbuf])){
+    //id or key
+      while(isalnum(buffer[pbuf])){
+        get_char();
+    }
+    return key2tok(lexbuf);
+} else if(ispunct(buffer[pbuf])){
+    if(buffer[pbuf] == ':' && buffer[pbuf + 1] == '='){
     //symboler och operatorer
     get_char();
-    lexbuf[plex] = '\0';
+    get_char();
+    return assign;
+    } else {
+      get_char();     
+    }
     return lex2tok(lexbuf);
-   } 
-   else {
-      get_char();
-      lexbuf[plex] = '\0';
-      return error;       
-   }
+    }   
+    return error;
 }
 
 /**********************************************************************/

@@ -98,7 +98,7 @@ toktyp lex2tok(char *fplex)
             return tokentab[i].token;
     }
 
-    return id;
+    return key2tok(fplex);
 }
 
 
@@ -111,7 +111,7 @@ toktyp key2tok(char * fplex)
         if (strcmp(keywordtab[i].text, fplex) == 0)
             return keywordtab[i].token;
     }
-    return nfound;
+    return id;
 }
 
 
@@ -128,7 +128,7 @@ char * tok2lex(toktyp ftok)
         if (tokentab[i].token == ftok)
             return tokentab[i].text;
     }
-    return "UNKNOWN";
+    return "error";
 }
 
 /**********************************************************************/

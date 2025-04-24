@@ -19,6 +19,7 @@
 /**********************************************************************/
 #define TABSIZE 1024                   /* symbol table size           */
 #define NAMELEN   20                   /* name length                 */
+#define LINE 50
 
 typedef char tname[NAMELEN];
 
@@ -89,7 +90,7 @@ static void initst()
 static int get_ref(char * fpname)
 {
     for(int i = 0; i < numrows; i++){
-        if(strcmp(name[i], fpname))
+        if(strcmp(name[i], fpname) == 0)
             return i;
         } 
     return nfound;
@@ -110,6 +111,13 @@ static void p_symrow(int ftref)
         get_size(ftref),
         get_addr(ftref));
 }
+void p_line(){
+    
+    for(int i = 0; i < LINE; i++){
+        printf("-");
+    }
+    printf("\n");
+}
 
 void p_symtab()
 {   
@@ -119,17 +127,22 @@ void p_symtab()
             total += get_size(i);
         }
     }
+    set_size(startp, next_addr);
+
     printf("\n");
-    printf("------------------------------------------------\n");
-    printf(" THE SYMBOL TABLE                               \n");
-    printf("------------------------------------------------\n");
+    p_line();
+    printf(" THE SYMBOL TABLE\n");
+    p_line();
     printf("   NAME         ROLE     TYPE     SIZE  ADDR \n");
-    printf("------------------------------------------------\n");
-    for(int i = 0; i < numrows; i++)
-    p_symrow(i);
-    printf("------------------------------------------------\n");
-    printf(" STATIC STORAGE REQUIRED IS %d BYTES            \n", total);
-    printf("------------------------------------------------\n");
+    p_line();
+    for (int i = 0; i < numrows; i++) {
+        if (!(get_role(i) == typ && get_type(i) == predef)) {
+            p_symrow(i);
+        }
+    }    
+    p_line();
+    printf(" STATIC STORAGE REQUIRED IS %d BYTES \n", total);
+    p_line();
 }
 
 /**********************************************************************/
@@ -137,10 +150,17 @@ void p_symtab()
 /**********************************************************************/
 void addp_name(char * fpname)
 {
+    static int initialized = 0;
+    if(!initialized){
+        initst();
+        initialized = 1;
+    }
+
+
     set_name(numrows, fpname);
     set_role(numrows, program);
     set_type(numrows, program);
-    set_size(numrows, 32);
+    set_size(numrows, 0);
     set_addr(numrows, 0);
     startp = numrows;
     numrows++;
@@ -165,44 +185,35 @@ void addv_name(char * fpname)
 /**********************************************************************/
 int find_name(char * fpname)
 {
-    for(int i = 0; i < numrows; i++){
-        if(strcmp(name[i], fpname) == 0)
-        return 1;
-    }
-    return 0;
+    int ref = get_ref(fpname);
+    return ref != nfound;
 }
 
 /**********************************************************************/
 /*  Set the type of an id list in the symbol table                    */
 /**********************************************************************/
+
 void setv_type(toktyp ftype)
 {
-    int size;
+    int size = 0;
+    const char *typename = tok2lex(ftype); 
 
-    switch(ftype) {
-        case program:
-            size = 32;
-        break;
-        case integer:
-            size = 4;
-        break;
-        case boolean:
-            size = 4;
-        break;
-        case real:
-            size = 8;
-        break;
-        default:
-            size = 0;
-        break;
+    for (int i = 0; i < numrows; i++) {
+        if (strcmp(get_name(i), typename) == 0 &&
+            get_role(i) == typ &&
+            get_type(i) == predef) {
+
+            size = get_size(i);
+            break;
+        }
     }
-    for (int i = startp + 1; i < numrows; i++) {
-        if(get_type(i) == undef) {
+    for (int i = 0; i < numrows; i++) {
+        if (get_role(i) == var && get_type(i) == undef) {
             set_type(i, ftype);
             set_size(i, size);
             set_addr(i, next_addr);
             next_addr += size;
-        }
+        } 
     }
 }
 
@@ -211,11 +222,7 @@ void setv_type(toktyp ftype)
 /**********************************************************************/
 toktyp get_ntype(char * fpname)
 {
-    for(int i = 0; i < numrows; i++){
-        if(strcmp(get_name(i), fpname) == 0)
-            return get_type(i);
-    }
-    return undef;
+    return get_type(get_ref(fpname));
 }
 
 /**********************************************************************/

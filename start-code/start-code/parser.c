@@ -68,14 +68,15 @@ static void out(char* s) {
 
 static void match(int t) {
     if (DEBUG)
-        printf("\n *** In  match        expected %s found %s", tok2lex(t), tok2lex(lookahead));
+       printf("\n *** In  match        expected %s found %s", tok2lex(t), tok2lex(lookahead));
 
-    if (lookahead == t)
+    if (lookahead == t){
         lookahead = get_token();
-    else {
+    } else {
+        printf("\nSYNTAX:   Symbol expected %s found %s", tok2lex(t), get_lexeme());
         is_parse_ok = 0;
-        printf("\n *** Syntax Error: expected %s, found %s\n", tok2lex(t), tok2lex(lookahead));
     }
+
 }
 
 
@@ -93,14 +94,19 @@ static void prog() {
 
 static void program_header() {
     in("program_header");
-    match(program); 
-    char program_name[NAMELEN];
-    strcpy(program_name, get_lexeme());
-    match(id);
-    addp_name(program_name);
-    
+    match(program);
+    if(lookahead == id){
+        char pname[NAMELEN];
+        strcpy(pname, get_lexeme());
+        addp_name(pname);
+        match(id);
+    } else {
+        printf("\nSYNTAX: ID expected found %s", get_lexeme());
+        addp_name("???");
+    }
     match('('); match(input);
-    match(','); match(output); match(')'); match(';');
+    match(','); match(output); 
+    match(')'); match(';');
     out("program_header");
 }
 
@@ -108,6 +114,10 @@ static void var_part() {
     in("var_part");
     if (lookahead == var) {
         match(var);
+        var_dec_list();
+    } else {
+        printf("\nSYNTAX: SYMBOL expected var found %s", get_lexeme());
+        is_parse_ok = 0;
         var_dec_list();
     }
     out("var_part");
@@ -124,22 +134,37 @@ static void var_dec_list() {
 
 static void var_dec() {
     in("var_dec");
+
     id_list();
     match(':');
     type();
     match(';');
+
     out("var_dec");
 }
 
 static void id_list() {
     in("id_list");
-    char varname[NAMELEN];
-    strcpy(varname, get_lexeme());
-    match(id);
-    addv_name(varname);
-    if (lookahead == ',') {
-        match(',');
-        id_list();
+    if(lookahead == id){
+        char name[NAMELEN];
+        strcpy(name, get_lexeme());
+        match(id);
+        if(find_name(name)){
+            printf("\nSEMANTIC: ID already declared: %s", name);
+            is_parse_ok = 0;
+        }
+        addv_name(name);
+        if (lookahead == ',') {
+            match(',');
+            id_list();
+        }
+    } else {
+        printf("\nSYNTAX:   ID expected found %s", get_lexeme());
+        is_parse_ok = 0;
+        lookahead = get_token();
+        if (lookahead == id) {
+            id_list();
+        }
     }
     out("id_list");
 }
@@ -147,14 +172,16 @@ static void id_list() {
 static void type() {
     in("type");
     toktyp typval = lookahead;
-    if (lookahead == integer) {
-        match(integer);
-    } else if (lookahead == real) {
-        match(real);
-    } else if (lookahead == boolean) {
-        match(boolean);
+    
+    if (lookahead == integer || lookahead == real || lookahead == boolean) {
+        match(lookahead);
+        setv_type(typval);
+    } else {
+        printf("\nSYNTAX:   Type name expected found %s", get_lexeme());
+        is_parse_ok = 0;
+        setv_type(error);  
     }
-    setv_type(typval);
+    
     out("type");
 }
 
@@ -186,15 +213,24 @@ static void stat() {
 static void assign_stat() {
     in("assign_stat");
     char idname[NAMELEN];
-    strcpy(idname, get_lexeme());
-    match(id);
-    toktyp t_left = get_ntype(idname);
-    match(assign);
-    toktyp t_right = expr();
-
-    if(t_left != t_right){
+    if(lookahead == id){
+        strcpy(idname, get_lexeme());
+        match(id);
+        if(!find_name(idname)){
+            printf("\nSEMANTIC: ID NOT declared: %s", idname);
+            is_parse_ok = 0;
+        }
+    } else {
+        printf("\nSYNTAX:   ID expected found %s", get_lexeme());
         is_parse_ok = 0;
     }
+    toktyp t_left = get_ntype(idname);
+        match(assign);
+        toktyp t_right = expr();
+        if(t_left != t_right){
+            printf("\nSEMANTIC: Assign types: %s := %s", tok2lex(t_left), tok2lex(t_right));
+            is_parse_ok = 0; 
+        }    
     out("assign_stat");
 }
 
@@ -238,15 +274,26 @@ static toktyp factor() {
 
 static toktyp operand() {
     in("operand");
-    toktyp t = undef;
+    toktyp t = error;
     if (lookahead == id) {
         char idname[NAMELEN];
         strcpy(idname, get_lexeme());
         match(id);
+        if (!find_name(idname)) {
+            printf("\nSEMANTIC: ID NOT declared: %s", idname);
+            is_parse_ok = 0;
+        }
         t = get_ntype(idname);
     } else if (lookahead == number) {
         match(number);
         t = integer;
+    } else if (lookahead == '('){
+        match('(');
+        t = expr();
+        match(')');
+    } else {
+        printf("\nSYNTAX:   Operand Expected");
+        is_parse_ok = 0;
     }
     out("operand");
     return t;
@@ -258,7 +305,21 @@ static toktyp operand() {
 int parser() {
     in("parser");
     lookahead = get_token(); 
-    prog();                   
+    if (lookahead == '$') {
+        printf("SYNTAX: Input file is empty\n");
+        p_symtab();
+        return 0;
+    }
+    prog();   
+    if (lookahead != '$'){
+        printf("\nSYNTAX:   Extra symbols after end of parse!");
+        printf("\n          ");
+        is_parse_ok = 0;
+        while(lookahead != '$'){
+            printf("%s ", get_lexeme());
+            lookahead = get_token();
+        }
+    }                
     out("parser");
     p_symtab();
     return is_parse_ok;        
